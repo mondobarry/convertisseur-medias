@@ -12,7 +12,10 @@ import { rendererConfig } from './webpack.renderer.config';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    name: 'Convertisseur Médias',
+    // ASCII file names: a DMG copy stores "é" decomposed (NFD) while Electron expects the
+    // composed form, which crashes the app at launch. The accented name is kept for display.
+    name: 'Convertisseur Medias',
+    executableName: 'Convertisseur Medias',
     appBundleId: 'com.mondobarry.convertisseurmedias',
     icon: './assets/app-icon', // Electron will look for .icns on macOS
     extraResource: [
@@ -23,35 +26,22 @@ const config: ForgeConfig = {
   makers: [
     new MakerZIP({}, ['darwin']),
     new MakerDMG({
+      name: 'Convertisseur-Medias',
       icon: './assets/app-icon.icns',
       format: 'ULFO',
     }),
   ],
   hooks: {
-    postPackage: async (forgeConfig, options) => {
-      const fs = require('fs');
-      const path = require('path');
-      const { execSync } = require('child_process');
-      const appName = 'Convertisseur Médias';
-      const appPath = path.join(options.outputPaths[0], `${appName}.app`);
-      const resourcesPath = path.join(appPath, 'Contents', 'Resources');
-      const infoPlistPath = path.join(appPath, 'Contents', 'Info.plist');
-
-      const iconPath = path.join(resourcesPath, 'electron.icns');
-      const targetIconPath = path.join(resourcesPath, `${appName}.icns`);
-
-      if (fs.existsSync(iconPath)) {
-        fs.renameSync(iconPath, targetIconPath);
+    // Packaging edits Info.plist after Electron's own signature, leaving the bundle with an
+    // invalid one: macOS then reports a downloaded copy as "damaged". Re-sign ad hoc.
+    postPackage: async (_forgeConfig, options) => {
+      const { execFileSync } = await import('child_process');
+      for (const outputPath of options.outputPaths) {
+        const app = `${outputPath}/Convertisseur Medias.app`;
+        execFileSync('codesign', ['--force', '--deep', '--sign', '-', app]);
+        execFileSync('codesign', ['--verify', '--deep', '--strict', app]);
       }
-
-      if (fs.existsSync(infoPlistPath)) {
-        let content = fs.readFileSync(infoPlistPath, 'utf8');
-        content = content.replace(/<key>CFBundleIconFile<\/key>\s*<string>electron\.icns<\/string>/g, `<key>CFBundleIconFile</key><string>${appName}.icns</string>`);
-        fs.writeFileSync(infoPlistPath, content);
-      }
-
-      execSync(`touch "${appPath}"`);
-    }
+    },
   },
   plugins: [
     new AutoUnpackNativesPlugin({}),
