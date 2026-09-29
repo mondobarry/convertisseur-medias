@@ -12,22 +12,41 @@ Convertisseur audio/vidéo pour macOS, basé sur FFmpeg — un fichier ou un dos
 - **Mode Expert** : arguments FFmpeg libres, guillemets gérés pour les chemins avec espaces
 - Analyse du fichier (durée, codec, dimensions) via ffprobe, journal FFmpeg consultable
 
+## Compatibilité
+
+- **Mac Apple Silicon (M1 à M4) sous macOS 15 Sequoia ou plus récent** — tous les Mac Apple Silicon peuvent passer à macOS 15
+- **Aucune installation requise** : ni Homebrew, ni FFmpeg. FFmpeg et ses 91 bibliothèques sont embarqués dans l'application
+- Si le FFmpeg embarqué ne peut pas s'exécuter, l'application utilise automatiquement celui de Homebrew (`/opt/homebrew/bin`) ou de `/usr/local/bin` s'il existe
+
+L'application n'est pas notariée par Apple. Au premier lancement, macOS la bloque : ouvrir
+**Réglages Système → Confidentialité et sécurité** et cliquer sur **Ouvrir quand même**.
+
 ## Architecture
 
 ```
-src/ffmpeg-args.ts   Construction des commandes FFmpeg — logique pure, testée
-src/index.ts         Processus principal Electron : dialogues, ffprobe, lancement de ffmpeg
-src/preload.ts       API exposée au rendu via contextBridge (contextIsolation, sans nodeIntegration)
-src/App.tsx          Interface React
+src/ffmpeg-args.ts        Construction des commandes FFmpeg — logique pure, testée
+src/ffmpeg-locator.ts     Choix du binaire : embarqué, sinon Homebrew / /usr/local
+src/index.ts              Processus principal Electron : dialogues, ffprobe, lancement de ffmpeg
+src/preload.ts            API exposée au rendu via contextBridge (contextIsolation, sans nodeIntegration)
+src/App.tsx               Interface React
+scripts/bundle-ffmpeg.sh  Rend le FFmpeg de Homebrew autonome pour l'embarquer
 ```
 
 ## Développement
 
-Prérequis : macOS et **Node 22** (voir `.nvmrc`) — avec Node 26, l'empaquetage Electron Forge s'arrête silencieusement et le module natif d'`appdmg` ne compile pas.
+Prérequis : macOS, **Node 22** (voir `.nvmrc`) — avec Node 26, l'empaquetage Electron Forge s'arrête silencieusement et le module natif d'`appdmg` ne compile pas.
 
-1. Placer des binaires `ffmpeg` et `ffprobe` **statiques** dans `binaries/arm64/` et `binaries/x64/`
-   (non versionnés). Un binaire lié à Homebrew ne fonctionnera pas sur un autre Mac —
-   vérifier avec `otool -L binaries/arm64/ffmpeg` qu'il ne dépend que de `/usr/lib` et `/System`.
+1. Préparer FFmpeg (non versionné, dans `binaries/arm64/`) :
+
+```bash
+brew install ffmpeg dylibbundler
+scripts/bundle-ffmpeg.sh
+```
+
+   Le script copie `ffmpeg`, `ffprobe` et toutes leurs bibliothèques Homebrew, réécrit les chemins
+   vers `@executable_path/libs`, re-signe le tout et échoue s'il reste une dépendance à Homebrew.
+   Il affiche la version minimale de macOS du résultat (celle des bouteilles Homebrew).
+
 2. Installer et lancer :
 
 ```bash
@@ -58,5 +77,6 @@ Electron · React · TypeScript · Webpack · Electron Forge · FFmpeg · Vitest
 
 ## Licence
 
-GPL v3 — voir [LICENSE](LICENSE). Les binaires FFmpeg distribués avec l'application sont compilés avec
-`--enable-gpl --enable-version3` ; leur code source est disponible sur [ffmpeg.org](https://ffmpeg.org).
+GPL v3 — voir [LICENSE](LICENSE). FFmpeg, distribué avec l'application, est compilé avec `--enable-gpl --enable-version3` ;
+son code source est disponible sur [ffmpeg.org](https://ffmpeg.org). Les bibliothèques embarquées
+(x264, libvpx, Opus, LAME, etc.) conservent leurs licences respectives.

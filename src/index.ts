@@ -1,20 +1,32 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { BinaryName, candidatePaths, locateBinary } from './ffmpeg-locator';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
-const getBinaryPath = (binName: string) => {
-  const arch = os.arch();
-  const binaryDir = app.isPackaged
+const binaryCache = new Map<BinaryName, string>();
+
+// Bundled binary first, then Homebrew / /usr/local if the bundled one cannot run
+const getBinaryPath = (binName: BinaryName): string => {
+  const cached = binaryCache.get(binName);
+  if (cached) return cached;
+
+  const bundledDir = app.isPackaged
     ? path.join(process.resourcesPath, 'binaries')
     : path.join(app.getAppPath(), 'binaries');
+  const candidates = candidatePaths(bundledDir, os.arch(), binName);
+  const works = (p: string) =>
+    fs.existsSync(p) && spawnSync(p, ['-hide_banner', '-version'], { timeout: 10_000 }).status === 0;
 
-  const archDir = arch === 'arm64' ? 'arm64' : 'x64';
-  return path.join(binaryDir, archDir, binName);
+  const found = locateBinary(candidates, works);
+  if (!found) return candidates[0]; // spawn will fail and the error is shown in the UI
+  if (found !== candidates[0]) console.warn(`Bundled ${binName} unusable, using ${found}`);
+  binaryCache.set(binName, found);
+  return found;
 };
 
 const createWindow = (): void => {
