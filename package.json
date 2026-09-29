@@ -1,0 +1,57 @@
+{
+  "name": "convertisseur-medias",
+  "productName": "Convertisseur Médias",
+  "version": "1.1.0",
+  "description": "Convertisseur audio/vidéo pour macOS basé sur FFmpeg (Electron + React)",
+  "main": ".webpack/main",
+  "private": true,
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "lint": "eslint --ext .ts,.tsx .",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "Mamadou Alimou Barry",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "@babel/preset-react": "^7.28.5",
+    "@electron-forge/cli": "^7.11.1",
+    "@electron-forge/maker-dmg": "^7.11.1",
+    "@electron-forge/maker-zip": "^7.11.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
+    "@electron-forge/plugin-fuses": "^7.11.1",
+    "@electron-forge/plugin-webpack": "^7.11.1",
+    "@electron/fuses": "^1.8.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "@vercel/webpack-asset-relocator-loader": "^1.7.3",
+    "appdmg": "^0.6.6",
+    "babel-loader": "^10.0.0",
+    "css-loader": "^6.11.0",
+    "electron": "^40.4.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-import": "^2.32.0",
+    "fork-ts-checker-webpack-plugin": "^7.3.0",
+    "node-loader": "^2.1.0",
+    "style-loader": "^3.3.4",
+    "ts-loader": "^9.5.4",
+    "typescript": "~5.9",
+    "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "allowScripts": {
+    "electron": true,
+    "esbuild": true,
+    "fsevents": true,
+    "fs-xattr": true,
+    "macos-alias": true,
+    "appdmg": true
+  }
+}
