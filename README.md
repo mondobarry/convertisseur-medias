@@ -1,53 +1,55 @@
-# Convertisseur Médias
+**English** · [Français](README.fr.md)
 
-Convertisseur audio/vidéo pour macOS, basé sur FFmpeg — un fichier ou un dossier entier en un clic.
+# Convertisseur Médias (Media Converter)
+
+Audio / video converter for macOS, built on FFmpeg — a single file or a whole folder in one click. The interface is in French.
 
 ![Interface](docs/screenshot.png)
 
-## Fonctionnalités
+## Features
 
-- **15 formats de sortie** : MP4, MKV, MOV, AVI, WebM, GIF, TS, FLV, MP3, WAV, FLAC, M4A, OGG, PNG, JPG — le codec adapté est choisi automatiquement (H.264 matériel via VideoToolbox, VP9/Opus, palette GIF, etc.)
-- **Conversion par lot** : tous les médias d'un dossier et de ses sous-dossiers (fichiers cachés et sorties précédentes ignorés)
-- **Découpe** (début, durée), **redimensionnement** (1080p → 360p, proportions conservées) et **filtres** (noir & blanc, sépia, flou, luminosité), combinables
-- **Mode Expert** : arguments FFmpeg libres, guillemets gérés pour les chemins avec espaces
-- Analyse du fichier (durée, codec, dimensions) via ffprobe, journal FFmpeg consultable
+- **15 output formats**: MP4, MKV, MOV, AVI, WebM, GIF, TS, FLV, MP3, WAV, FLAC, M4A, OGG, PNG, JPG — the right codec is picked automatically (hardware H.264 via VideoToolbox, VP9/Opus, GIF palette, etc.)
+- **Batch conversion**: every media file in a folder and its subfolders (hidden files and previous outputs skipped)
+- **Trimming** (start, duration), **resizing** (1080p → 360p, aspect ratio kept) and **filters** (black & white, sepia, blur, brightness), combinable
+- **Expert mode**: free FFmpeg arguments, quoting handled for paths with spaces
+- File analysis (duration, codec, dimensions) via ffprobe, viewable FFmpeg log
 
-## Compatibilité
+## Compatibility
 
-- **Mac Apple Silicon (M1 à M4) sous macOS 15 Sequoia ou plus récent** — tous les Mac Apple Silicon peuvent passer à macOS 15
-- **Aucune installation requise** : ni Homebrew, ni FFmpeg. FFmpeg et ses 91 bibliothèques sont embarqués dans l'application
-- Si le FFmpeg embarqué ne peut pas s'exécuter, l'application utilise automatiquement celui de Homebrew (`/opt/homebrew/bin`) ou de `/usr/local/bin` s'il existe
+- **Apple Silicon Macs (M1 to M4) on macOS 15 Sequoia or later** — every Apple Silicon Mac can be upgraded to macOS 15
+- **Nothing to install**: no Homebrew, no FFmpeg. FFmpeg and its 91 libraries are bundled in the app
+- If the bundled FFmpeg cannot run, the app automatically falls back to Homebrew's (`/opt/homebrew/bin`) or to `/usr/local/bin` if present
 
-L'application n'est pas notariée par Apple. Au premier lancement, macOS la bloque : ouvrir
-**Réglages Système → Confidentialité et sécurité** et cliquer sur **Ouvrir quand même**.
+The app is not notarised by Apple. On first launch macOS blocks it: open
+**System Settings → Privacy & Security** and click **Open Anyway**.
 
 ## Architecture
 
 ```
-src/ffmpeg-args.ts        Construction des commandes FFmpeg — logique pure, testée
-src/ffmpeg-locator.ts     Choix du binaire : embarqué, sinon Homebrew / /usr/local
-src/index.ts              Processus principal Electron : dialogues, ffprobe, lancement de ffmpeg
-src/preload.ts            API exposée au rendu via contextBridge (contextIsolation, sans nodeIntegration)
-src/App.tsx               Interface React
-scripts/bundle-ffmpeg.sh  Rend le FFmpeg de Homebrew autonome pour l'embarquer
+src/ffmpeg-args.ts        Builds FFmpeg commands — pure logic, tested
+src/ffmpeg-locator.ts     Picks the binary: bundled, else Homebrew / /usr/local
+src/index.ts              Electron main process: dialogs, ffprobe, running ffmpeg
+src/preload.ts            API exposed to the renderer via contextBridge (contextIsolation, no nodeIntegration)
+src/App.tsx               React interface
+scripts/bundle-ffmpeg.sh  Makes Homebrew's FFmpeg self-contained for bundling
 ```
 
-## Développement
+## Development
 
-Prérequis : macOS, **Node 22** (voir `.nvmrc`) — avec Node 26, l'empaquetage Electron Forge s'arrête silencieusement et le module natif d'`appdmg` ne compile pas.
+Requirements: macOS, **Node 22** (see `.nvmrc`) — with Node 26, Electron Forge packaging stops silently and `appdmg`'s native module does not compile.
 
-1. Préparer FFmpeg (non versionné, dans `binaries/arm64/`) :
+1. Prepare FFmpeg (not versioned, in `binaries/arm64/`):
 
 ```bash
 brew install ffmpeg dylibbundler
 scripts/bundle-ffmpeg.sh
 ```
 
-   Le script copie `ffmpeg`, `ffprobe` et toutes leurs bibliothèques Homebrew, réécrit les chemins
-   vers `@executable_path/libs`, re-signe le tout et échoue s'il reste une dépendance à Homebrew.
-   Il affiche la version minimale de macOS du résultat (celle des bouteilles Homebrew).
+   The script copies `ffmpeg`, `ffprobe` and all their Homebrew libraries, rewrites the paths
+   to `@executable_path/libs`, re-signs everything and fails if any Homebrew dependency remains.
+   It prints the minimum macOS version of the result (that of the Homebrew bottles).
 
-2. Installer et lancer :
+2. Install and run:
 
 ```bash
 npm install
@@ -57,26 +59,26 @@ npm start
 ## Tests
 
 ```bash
-npm test                                    # tests unitaires
-FFMPEG_PATH=binaries/arm64/ffmpeg npm test  # + conversions réelles vers les 15 formats
+npm test                                    # unit tests
+FFMPEG_PATH=binaries/arm64/ffmpeg npm test  # + real conversions to the 15 formats
 ```
 
-## Construire l'application
+## Building the app
 
 ```bash
-npm run make   # .app, .zip et .dmg dans out/
+npm run make   # .app, .zip and .dmg in out/
 ```
 
 ## Stack
 
 Electron · React · TypeScript · Webpack · Electron Forge · FFmpeg · Vitest
 
-## Auteur
+## Author
 
-**Mamadou Alimou Barry** — [mondobarry.com](https://mondobarry.com)
+**Mamadou Alimou Barry** — [mondobarry.com/en](https://www.mondobarry.com/en/)
 
-## Licence
+## License
 
-GPL v3 — voir [LICENSE](LICENSE). FFmpeg, distribué avec l'application, est compilé avec `--enable-gpl --enable-version3` ;
-son code source est disponible sur [ffmpeg.org](https://ffmpeg.org). Les bibliothèques embarquées
-(x264, libvpx, Opus, LAME, etc.) conservent leurs licences respectives.
+GPL v3 — see [LICENSE](LICENSE). FFmpeg, shipped with the app, is built with `--enable-gpl --enable-version3`;
+its source code is available on [ffmpeg.org](https://ffmpeg.org). The bundled libraries
+(x264, libvpx, Opus, LAME, etc.) keep their respective licenses.
